@@ -1,15 +1,15 @@
 package com.exposure.controllers;
 
 import com.exposure.DTOs.Auth.AuthRequest;
+import com.exposure.DTOs.Auth.AuthResponse;
 import com.exposure.models.User;
 import com.exposure.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 
-// TODO: проверить сохранение пользователя
-// TODO: исправить ошибки на фронте связанные с коннектиоом
 
 @RestController
 @RequestMapping("/api")
@@ -21,6 +21,8 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody AuthRequest request) {
         // Проверяем, не занято ли имя
+        System.out.println("register");
+
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             return ResponseEntity.badRequest().body("Username is already taken");
         }
@@ -33,10 +35,10 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequest request) {
+    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
         return userRepository.findByUsername(request.getUsername())
-                .filter(user -> user.getPassword().equals(request.getPassword())) // Сравнение паролей
-                .map(user -> ResponseEntity.ok(user.getId())) // Возвращаем ID
-                .orElse(ResponseEntity.status(401).build()); // 401 если неверно
+                .filter(user -> user.getPassword().equals(request.getPassword()))
+                .map(user -> ResponseEntity.ok(new AuthResponse(user.getId(), null)))
+                .orElse(ResponseEntity.status(401).body(new AuthResponse(null, "Неверные данные.")));
     }
 }

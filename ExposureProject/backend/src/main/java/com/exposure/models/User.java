@@ -19,12 +19,11 @@ import java.time.LocalDateTime;
 @Table(name = "users")
 @NoArgsConstructor
 public class User extends SessionMember {
-    private String username; // different from nickname!
+    private String username;
 
     private String password;
 
     private LocalDateTime createdAt;
-
 
     public User(String username, String password) {
         super(username);

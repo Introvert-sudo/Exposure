@@ -1,19 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const AuthScreen = () => {
-  const [isLogin, setIsLogin] = useState(true); // Переключатель Вход/Регистрация
+const AuthScreen = ({ setIsAuthenticated }) => {
+  const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // URL зависит от вашего бэкенда
     const endpoint = isLogin ? '/api/login' : '/api/register';
-    
-    // ЧТО ПЕРЕДАЕМ: JSON с username и password
     const payload = { username, password };
 
     try {
@@ -26,10 +22,9 @@ const AuthScreen = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // ЧТО ОЖИДАЕМ: Обычно бэкенд возвращает токен (JWT) или данные пользователя
-        console.log('Успех:', data);
-        localStorage.setItem('token', data.token); // Сохраняем токен
-        navigate('/'); // Перенаправляем на главную
+        localStorage.setItem('token', data.token);
+        setIsAuthenticated(true);
+        navigate('/');
       } else {
         alert(data.message || 'Ошибка авторизации');
       }

@@ -2,15 +2,18 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import MainScreen from './MainScreen';
 import GameScreen from './GameScreen';
 import AuthScreen from './AuthScreen';
+import React, { useState } from 'react';
 
 export default function App() {
-  // Простая проверка наличия токена
-  const isAuthenticated = !!localStorage.getItem('token');
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
 
   return (
     <Router>
       <Routes>
-        <Route path="/auth" element={<AuthScreen />} />
+        <Route 
+          path="/auth" 
+          element={<AuthScreen setIsAuthenticated={setIsAuthenticated} />} 
+        />
         
         {/* Защищенные роуты */}
         <Route 
