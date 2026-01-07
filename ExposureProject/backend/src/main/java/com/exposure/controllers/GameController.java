@@ -71,7 +71,7 @@ public class GameController {
 
     @Transactional
     @PostMapping("/question")
-    public ResponseEntity<?> onQuestion(@RequestBody QuestionRequest request) {
+    public ResponseEntity<?> question(@RequestBody QuestionRequest request) {
         Optional<User> user = userRepository.findById(request.userId);
         Optional<Bot> bot = botRepository.findBotById(request.botId);
         Optional<GameSession> gameSession = gameSessionRepository.findById(request.sessionId);
@@ -101,7 +101,7 @@ public class GameController {
 
 
     @PostMapping
-    public void onChoice() {
+    public void trust() {
         /*
         На вход должно приходить:
         - Айди пользователя
@@ -120,6 +120,16 @@ public class GameController {
     // TODO: Обработка завершенния игровой сессии.
     @PostMapping("/endsession")
     public void endSession() {
-        // тут игрок просто хочет закончить игровую сессию. Удаляешь сессию и отправляешь ответ пользователю.
+        /*
+        На вход должно приходить:
+        - Айди пользователя
+        - Айди сессии
+
+        Здесь мы проверяем существует ли пользователь и сессия
+        Проверяем есть ли в сессии пользователь
+        - Если нет то отправляем код 400, Bad request.
+
+        Если все ок, то завершаем сессию.
+        */
     }
 }
