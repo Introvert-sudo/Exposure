@@ -75,6 +75,10 @@ public class GameController {
     @Transactional
     @PostMapping("/question")
     public ResponseEntity<?> question(@RequestBody QuestionRequest request) {
+
+        // Здесь код норм, но проверки лучше сделать линейными чтобы не было такой глубокой вложенности if'ов.
+        // Короче, lowkey не красиво выглядит, но работает.
+
         Optional<User> user = userRepository.findById(request.userId);
         Optional<Bot> bot = botRepository.findBotById(request.botId);
         Optional<GameSession> gameSession = gameSessionRepository.findById(request.sessionId);
