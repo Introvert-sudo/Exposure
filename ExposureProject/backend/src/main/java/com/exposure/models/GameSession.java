@@ -13,6 +13,11 @@ import java.util.List;
  */
 
 
+
+/*
+    TODO: Добавить в модель Id миссии.
+ */
+
 @Getter
 @Setter
 @Entity

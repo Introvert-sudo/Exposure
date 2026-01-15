@@ -10,8 +10,6 @@ export default function MainScreen() {
 
   const userToken = localStorage.getItem('token');
 
-  // TODO: Нужно добавить здесь вызов GET для GetPage и кидать туда токен.
-
   useEffect(() => {
     const initializePage = async () => {
       try {

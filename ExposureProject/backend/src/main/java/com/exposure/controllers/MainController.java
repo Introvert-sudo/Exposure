@@ -66,4 +66,10 @@ public class MainController {
 
         return null;
     }
+
+    // TODO: Добавить GET метод, который будет отправлять список доступных миссий пользователю.
+    @GetMapping("/missions")
+    public void getMissions() {
+
+    }
 }

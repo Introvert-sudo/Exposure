@@ -30,11 +30,13 @@ public class GameController {
 
 
     @PostMapping("/start")
-    public ResponseEntity<?> getPage(@RequestBody GameRequest request) {
+    public ResponseEntity<?> getPage(@RequestBody GameRequest request) { // TODO: Переделать GameRequest - добавить выбор Id миссии.
         Optional<User> userOpt = userRepository.findById(Long.parseLong(request.userId));
         List<Long> selectedBotIds = request.selectedBotId;
 
-        if (userOpt.isPresent() && selectedBotIds != null && !selectedBotIds.isEmpty()) {
+        // TODO: Добавить сюда выборку Id миссии из request.
+
+        if (userOpt.isPresent() && selectedBotIds != null && !selectedBotIds.isEmpty()) { // TODO: Проверка есть ли такая миссия в базе.
             List<Bot> bots = botRepository.findAllById(selectedBotIds);
 
             if (bots.size() == selectedBotIds.size()) {
