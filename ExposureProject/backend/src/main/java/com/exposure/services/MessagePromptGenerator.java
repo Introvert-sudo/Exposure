@@ -9,7 +9,7 @@ import java.util.List;
 
 
 @Service
-public class PromptGenerator {
+public class MessagePromptGenerator {
     public String generatePrompt(Bot bot, String userMessage, BotStates botState, List<Message> history) {
         StringBuilder prompt = new StringBuilder();
 

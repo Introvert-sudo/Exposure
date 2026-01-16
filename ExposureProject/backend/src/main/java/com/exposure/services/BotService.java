@@ -12,14 +12,14 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class BotService implements BotResponseInterface {
 
-    private final PromptGenerator promptGenerator;
+    private final MessagePromptGenerator messagePromptGenerator;
     private final OllamaClient ollamaClient;
 
     public String DEFAULT_OLLAMA_MODEL = "llama3.1"; // TODO: перенести в файл конфигурации
 
     @Override
     public String getResponse(Bot bot, String question, BotStates botState, Chat chat) {
-        String prompt = promptGenerator.generatePrompt(bot, question, botState, chat.getMessages());
+        String prompt = messagePromptGenerator.generatePrompt(bot, question, botState, chat.getMessages());
 
         return ollamaClient.generate(DEFAULT_OLLAMA_MODEL, prompt);
     }
