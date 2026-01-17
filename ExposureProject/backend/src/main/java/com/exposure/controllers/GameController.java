@@ -4,9 +4,8 @@ import com.exposure.DTOs.game.*;
 import com.exposure.DTOs.service.BotStates;
 import com.exposure.interfaces.BotResponseInterface;
 import com.exposure.models.*;
-import com.exposure.repositories.BotRepository;
-import com.exposure.repositories.GameSessionRepository;
-import com.exposure.repositories.UserRepository;
+import com.exposure.repositories.*;
+import com.exposure.services.MissionService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,18 +24,26 @@ public class GameController {
     private final BotRepository botRepository;
     private final UserRepository userRepository;
     private final GameSessionRepository gameSessionRepository;
+    private final MissionRepository missionRepository;
+    private final StoryRepository storyRepository;
 
+    private MissionService missionService;
     private final BotResponseInterface botResponseService;
 
-
+    @Transactional
     @PostMapping("/start")
     public ResponseEntity<?> getPage(@RequestBody GameRequest request) { // TODO: Переделать GameRequest - добавить выбор Id миссии.
         Optional<User> userOpt = userRepository.findById(Long.parseLong(request.userId));
         List<Long> selectedBotIds = request.selectedBotId;
 
         // TODO: Добавить сюда выборку Id миссии из request.
+        Optional<Mission> missionOpt = missionRepository.findById(Long.parseLong("1")); // Mock
 
-        if (userOpt.isPresent() && selectedBotIds != null && !selectedBotIds.isEmpty()) { // TODO: Проверка есть ли такая миссия в базе.
+        if (userOpt.isPresent()
+                && selectedBotIds != null
+                && !selectedBotIds.isEmpty()
+                && missionOpt.isPresent()) {
+
             List<Bot> bots = botRepository.findAllById(selectedBotIds);
 
             if (bots.size() == selectedBotIds.size()) {
@@ -46,6 +53,14 @@ public class GameController {
                 Collections.shuffle(mutableBots);
                 Bot randomLiar = mutableBots.getFirst();
                 List<Bot> lyingBots = List.of(randomLiar);
+
+                /*
+                Здесь добавить логику создания/получения истории.
+                 */
+
+                Mission mission = missionOpt.get();
+                missionService.generateStory(mission, bots, lyingBots);
+
 
                 int initialLimit = 5; // TODO: Убрать в будущем эту логику в настройки.
 
@@ -60,7 +75,8 @@ public class GameController {
                     gameSession.addChat(chat);
                 }
 
-                gameSessionRepository.save(gameSession);
+                gameSessionRepository.save(gameSession); // Поскольку сделал метод транзакционным то вроде можно убирать.
+                // P.s. Я не знаю, нужно ли делать @Transactional или нет. У меня тут просто Story генерируется... просто для безопасности.
 
                 List<BotDTO> botDTOs = bots.stream()
                         .map(b -> new BotDTO(b.getId(), b.getName()))

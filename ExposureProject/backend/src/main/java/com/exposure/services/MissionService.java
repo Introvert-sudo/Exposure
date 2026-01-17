@@ -8,6 +8,7 @@ import com.exposure.models.Story;
 import com.exposure.repositories.StoryRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.stereotype.Service;
@@ -18,24 +19,17 @@ import java.util.Map;
 
 
 @Service
+@RequiredArgsConstructor
 public class MissionService {
 
     private final ChatClient chatClient;
     private final StoryRepository storyRepository;
     private final ObjectMapper objectMapper;
 
-    public MissionService(ChatClient.Builder chatClientBuilder,
-                          StoryRepository storyRepository,
-                          ObjectMapper objectMapper) {
-        this.chatClient = chatClientBuilder.build();
-        this.storyRepository = storyRepository;
-        this.objectMapper = objectMapper;
-    }
-
-    public Story generateStory(Mission mission, List<Bot> selectedBots) {
+    public Story generateStory(Mission mission, List<Bot> bots, List<Bot> lying_bots) { // TODO: добавить еще в промпт лгущих ботов.
         String prompt = createStoryPrompt(
                 mission.getHistory_description(),
-                selectedBots
+                bots
         );
 
         StoryResponse response;

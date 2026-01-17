@@ -1,4 +1,4 @@
-package com.exposure;
+package com.exposure.configs;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
