@@ -108,6 +108,7 @@
               <artifactId>lombok</artifactId>
             </exclude>
           </excludes>
+          <jvmArguments>-Duser.timezone=Europe/Kyiv</jvmArguments>
         </configuration>
       </plugin>
     </plugins>
