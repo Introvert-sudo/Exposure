@@ -64,7 +64,7 @@ public class MissionService {
                 .filter(CharacterData::isGuilty)
                 .count();
 
-        if (guiltyCount != 1) {
+        if (guiltyCount != 1) { // Пока что бизнес логика подразумевает одного виновного, но я оставил список просто чтобы в будущем можно было легко изменить
             throw new IllegalStateException("Story must contain exactly one guilty character");
         }
     }
