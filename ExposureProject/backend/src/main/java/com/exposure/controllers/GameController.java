@@ -27,7 +27,7 @@ public class GameController {
     private final MissionRepository missionRepository;
     private final StoryRepository storyRepository;
 
-    private MissionService missionService;
+    private final MissionService missionService;
     private final BotResponseInterface botResponseService;
 
     @Transactional
@@ -38,6 +38,7 @@ public class GameController {
 
         // TODO: Добавить сюда выборку Id миссии из request.
         Optional<Mission> missionOpt = missionRepository.findById(Long.parseLong("1")); // Mock
+
 
         if (userOpt.isPresent()
                 && selectedBotIds != null
@@ -59,7 +60,12 @@ public class GameController {
                  */
 
                 Mission mission = missionOpt.get();
-                missionService.generateStory(mission, bots, lyingBots);
+                Story story;
+                try {
+                    story = missionService.generateStory(mission, bots, lyingBots);
+                } catch (Exception e) {
+                    return ResponseEntity.status(500).build();
+                }
 
 
                 int initialLimit = 5; // TODO: Убрать в будущем эту логику в настройки.
@@ -90,6 +96,7 @@ public class GameController {
                 ));
             }
         }
+
         return ResponseEntity.badRequest().build();
     }
 

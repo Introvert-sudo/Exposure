@@ -30,5 +30,13 @@ public class Mission {
 
     @Min(2)
     @Max(5)
+    @Column
     private int roles_amount;
+
+    public Mission(String name, String description, String history_description, int roles_amount) {
+        this.name = name;
+        this.description = description;
+        this.history_description = history_description;
+        this.roles_amount = roles_amount;
+    }
 }

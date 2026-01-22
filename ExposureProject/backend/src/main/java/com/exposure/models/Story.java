@@ -18,7 +18,7 @@ public class Story {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "mission_id", referencedColumnName = "id")
     private Mission mission;
 
