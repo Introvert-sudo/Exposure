@@ -1,19 +1,22 @@
 package com.exposure.controllers;
 
 import com.exposure.DTOs.game.*;
-import com.exposure.DTOs.service.AI.StoryResponse;
 import com.exposure.DTOs.service.BotStates;
 import com.exposure.interfaces.BotResponseInterface;
 import com.exposure.models.*;
 import com.exposure.repositories.*;
 import com.exposure.services.MissionService;
+import com.exposure.services.StoryGeneratorService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.support.SessionStatus;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -67,12 +70,19 @@ public class GameController {
                 Bot randomLiar = mutableBots.getFirst();
                 List<Bot> lyingBots = List.of(randomLiar);
 
+                int initialLimit = 5; // TODO: Убрать в будущем эту логику в настройки.
 
                 Mission mission = missionOpt.get();
+
+                GameSession gameSession = new GameSession(user, bots, lyingBots, initialLimit, mission);
+                gameSessionRepository.save(gameSession);
+
+                missionService.generateStoryAsync(gameSession.getId(), bots.size(), lyingBots.size());
+                /*
                 Story story;
                 StoryResponse storyDto;
                 try {
-                    story = missionService.generateStory(mission, bots.size(), lyingBots.size());
+                    generateStoryAsync(gameSession, mission, bots.size(), lyingBots.size());
 
                     storyDto = objectMapper.readValue(story.getGeneratedStoryJson(), StoryResponse.class);
                 } catch (Exception e) {
@@ -80,13 +90,9 @@ public class GameController {
                     return ResponseEntity.status(500).build();
                 }
 
-
-                int initialLimit = 5; // TODO: Убрать в будущем эту логику в настройки.
-
-                GameSession gameSession = new GameSession(user, bots, lyingBots, initialLimit, mission, story);
-
                 List<SessionBotRole> botRoles = missionService.assignRoles(gameSession, storyDto, bots);
                 gameSession.setBotRoles(botRoles);
+                 */
 
                 for (Bot bot : bots) {
                     Chat chat = new Chat();
@@ -96,8 +102,6 @@ public class GameController {
 
                     gameSession.addChat(chat);
                 }
-
-                gameSessionRepository.save(gameSession);
 
                 List<BotDTO> botDTOs = bots.stream()
                         .map(b -> new BotDTO(b.getId(), b.getName()))
@@ -137,7 +141,7 @@ public class GameController {
 
         Story story = gameSession.getStory();
 
-        BotStates state = gameSession.isBotLying(bot.getId()) ? BotStates.LYING : BotStates.NOT_LYING;
+        // BotStates state = gameSession.isBotLying(bot.getId()) ? BotStates.LYING : BotStates.NOT_LYING;
         String botResponseText = botResponseService.getResponse(bot, request.question, chat, story, gameSession);
 
         if (botResponseText != null && botResponseText.length() > 1000) {

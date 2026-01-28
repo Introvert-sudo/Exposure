@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.web.bind.support.SessionStatus;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -67,13 +69,15 @@ public class GameSession {
 
     private Boolean isActive;
 
-    public GameSession(User user, List<Bot> bots, List<Bot> lyingBots, int initialQuestions, Mission mission, Story story) {
+    @Enumerated(EnumType.STRING)
+    private GameStatus status;
+
+    public GameSession(User user, List<Bot> bots, List<Bot> lyingBots, int initialQuestions, Mission mission) {
         this.user = user;
         this.bots = bots;
         this.lyingBots = lyingBots;
         this.questionsLeft = initialQuestions;
         this.mission = mission;
-        this.story = story;
         this.isActive = true;
     }
 
@@ -93,3 +97,5 @@ public class GameSession {
         this.chats.add(chat);
     }
 }
+
+
