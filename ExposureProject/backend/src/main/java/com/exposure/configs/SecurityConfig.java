@@ -28,8 +28,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Разрешаем pre-flight запросы (OPTIONS) для всех
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/register", "/api/login", "/api/main", "/api/main/bots",
-                                "/api/game/start", "/api/game/question", "/api/game/choice").permitAll()
+                        .requestMatchers("/api/register", "/api/login", "/api/main", "/api/main/bots", "/api/main/missions",
+                                "/api/game/start", "/api/game/question", "/api/game/choice", "/api/game/status/{sessionId}",
+                                "/api/game/mission/{sessionId}").permitAll()
                         .anyRequest().authenticated()
                 )
                 // Если используете JWT/Token, убедитесь, что сессии STATELESS

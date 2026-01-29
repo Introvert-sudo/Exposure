@@ -1,35 +1,78 @@
 package com.exposure.services;
 
-import com.exposure.models.GameSession;
-import com.exposure.models.GameStatus;
-import com.exposure.models.Mission;
-import com.exposure.models.Story;
+import com.exposure.DTOs.service.AI.RolesData;
+import com.exposure.DTOs.service.AI.StoryResponse;
+import com.exposure.events.GameSessionCreatedEvent;
+import com.exposure.models.*;
 import com.exposure.repositories.GameSessionRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class MissionService {
     private final GameSessionRepository gameSessionRepository;
-
     private final StoryGeneratorService storyGeneratorService;
 
+    private final Logger logger = LoggerFactory.getLogger(MissionService.class);
+
     @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional
-    public void generateStoryAsync(Long session_id, int bots, int lyingBots) {
-        GameSession session = gameSessionRepository.findById(session_id).orElseThrow();
-        Mission mission = session.getMission();
+    public void handleGameStarted(GameSessionCreatedEvent event) {
+        GameSession session = gameSessionRepository.findById(event.sessionId())
+                .orElseThrow(() -> new RuntimeException("Session not found after commit!"));
 
         try {
-            Story story = storyGeneratorService.generateStory(mission, bots, lyingBots);
+            Map<String, Object> response = storyGeneratorService.generateStory(
+                    session.getMission(), event.botsCount(), event.lyingBotsCount()
+            );
+
+            Story story = (Story) response.get("story");
+            StoryResponse storyResponse = (StoryResponse) response.get("storyResponse");
+
+            List<SessionBotRole> botRoles = assignRoles(session, storyResponse, session.getBots());
+            session.setBotRoles(botRoles);
+
             session.setStatus(GameStatus.READY);
             session.setStory(story);
+
         } catch (Exception e) {
             session.setStatus(GameStatus.FAILED);
         }
         gameSessionRepository.save(session);
+    }
+
+    public List<SessionBotRole> assignRoles(GameSession session, StoryResponse storyData, List<Bot> bots) {
+        List<SessionBotRole> assignments = new ArrayList<>();
+        List<RolesData> rolesJson = storyData.roles_data();
+
+        RolesData guiltyRole = rolesJson.stream()
+                .filter(RolesData::isGuilty)
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("No guilty role in JSON"));
+
+        Bot guiltyBot = session.getLyingBots().get(0);
+
+        assignments.add(new SessionBotRole(null, session, guiltyBot, guiltyRole.role(), true));
+
+        List<Bot> otherBots = bots.stream().filter(b -> !b.getId().equals(guiltyBot.getId())).toList();
+        List<RolesData> otherRoles = rolesJson.stream().filter(r -> !r.isGuilty()).toList();
+
+        for (int i = 0; i < otherBots.size(); i++) {
+            assignments.add(new SessionBotRole(null, session, otherBots.get(i), otherRoles.get(i).role(), false));
+        }
+
+        return assignments;
     }
 }

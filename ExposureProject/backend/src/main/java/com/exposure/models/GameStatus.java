@@ -1,7 +1,7 @@
 package com.exposure.models;
 
 public enum GameStatus {
-    CREATING,
+    GENERATING,
     READY,
     FAILED
 }

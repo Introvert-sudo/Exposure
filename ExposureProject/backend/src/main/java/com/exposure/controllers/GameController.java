@@ -1,32 +1,28 @@
 package com.exposure.controllers;
 
 import com.exposure.DTOs.game.*;
-import com.exposure.DTOs.service.BotStates;
+import com.exposure.DTOs.main.InitializeGame;
+import com.exposure.events.GameSessionCreatedEvent;
 import com.exposure.interfaces.BotResponseInterface;
 import com.exposure.models.*;
 import com.exposure.repositories.*;
 import com.exposure.services.MissionService;
-import com.exposure.services.StoryGeneratorService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.support.SessionStatus;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/game")
+@CrossOrigin(origins = "http://localhost:5173")
 public class GameController {
     private final BotRepository botRepository;
     private final UserRepository userRepository;
@@ -34,12 +30,11 @@ public class GameController {
     private final MissionRepository missionRepository;
     private final StoryRepository storyRepository;
 
-    private final MissionService missionService;
     private final BotResponseInterface botResponseService;
 
     private final Logger logger = LoggerFactory.getLogger(GameController.class);
 
-    private final ObjectMapper objectMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
 
     /*
@@ -47,12 +42,16 @@ public class GameController {
      */
     @Transactional
     @PostMapping("/start")
-    public ResponseEntity<?> getPage(@RequestBody GameRequest request) { // TODO: Переделать GameRequest - добавить выбор Id миссии.
-        Optional<User> userOpt = userRepository.findById(Long.parseLong(request.userId));
-        List<Long> selectedBotIds = request.selectedBotId;
+    public ResponseEntity<?> getPage(@RequestBody GameRequest request) {
 
-        // TODO: Добавить сюда выборку Id миссии из request.
-        Optional<Mission> missionOpt = missionRepository.findById(Long.parseLong("1")); // Mock
+        if (request.userId == null || request.selectedBotIds == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Optional<User> userOpt = userRepository.findById(Long.parseLong(request.userId));
+        List<Long> selectedBotIds = request.selectedBotIds;
+        Long missionId = request.missionId != null ? request.missionId : 1L;
+        Optional<Mission> missionOpt = missionRepository.findById(missionId);
 
 
         if (userOpt.isPresent()
@@ -70,29 +69,15 @@ public class GameController {
                 Bot randomLiar = mutableBots.getFirst();
                 List<Bot> lyingBots = List.of(randomLiar);
 
-                int initialLimit = 5; // TODO: Убрать в будущем эту логику в настройки.
-
                 Mission mission = missionOpt.get();
+                int initialLimit = mission.getInitialQuestionsAmount();
 
                 GameSession gameSession = new GameSession(user, bots, lyingBots, initialLimit, mission);
                 gameSessionRepository.save(gameSession);
 
-                missionService.generateStoryAsync(gameSession.getId(), bots.size(), lyingBots.size());
-                /*
-                Story story;
-                StoryResponse storyDto;
-                try {
-                    generateStoryAsync(gameSession, mission, bots.size(), lyingBots.size());
-
-                    storyDto = objectMapper.readValue(story.getGeneratedStoryJson(), StoryResponse.class);
-                } catch (Exception e) {
-                    logger.error(e.toString());
-                    return ResponseEntity.status(500).build();
-                }
-
-                List<SessionBotRole> botRoles = missionService.assignRoles(gameSession, storyDto, bots);
-                gameSession.setBotRoles(botRoles);
-                 */
+                eventPublisher.publishEvent(new GameSessionCreatedEvent(
+                        gameSession.getId(), bots.size(), lyingBots.size()
+                ));
 
                 for (Bot bot : bots) {
                     Chat chat = new Chat();
@@ -107,12 +92,7 @@ public class GameController {
                         .map(b -> new BotDTO(b.getId(), b.getName()))
                         .toList();
 
-                return ResponseEntity.ok(new GameResponse(
-                        gameSession.getId(),
-                        user.getId(),
-                        botDTOs,
-                        gameSession.getQuestionsLeft()
-                ));
+                return ResponseEntity.ok(new InitializeGame(gameSession.getId(), botDTOs, initialLimit));
             }
         }
 
@@ -190,6 +170,50 @@ public class GameController {
             return ResponseEntity.ok(new ChoiceResponse(true, bot.getId()));
         } else {
             return ResponseEntity.ok(new ChoiceResponse(false, bot.getId()));
+        }
+    }
+
+    @GetMapping("/mission/{sessionId}")
+    public ResponseEntity<?> missions(@PathVariable("sessionId") String sessionIdStr) {
+        try {
+            Long sessionId = Long.parseLong(sessionIdStr);
+            GameSession gameSession = gameSessionRepository.findById(sessionId).orElseThrow();
+            Mission mission = gameSession.getMission();
+
+            if (mission != null) {
+                GameMissionResponse response = new GameMissionResponse(
+                        mission.getTitle(),
+                        mission.getDescription(),
+                        mission.getInitialQuestionsAmount());
+
+                return ResponseEntity.ok(response);
+            }
+
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            logger.error("Error in \"/mission\": ", e);
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/status/{sessionId}")
+    public ResponseEntity<?> status(@PathVariable("sessionId") String sessionId) {
+        try {
+            Long id = Long.parseLong(sessionId);
+            GameSession gameSession = gameSessionRepository.findById(id).orElseThrow();
+
+            Map<String, String> response = new HashMap<>();
+
+            if (gameSession.getStatus().equals(GameStatus.READY) && gameSession.getStory() != null) {
+                response.put("status", "READY");
+                return ResponseEntity.ok(response);
+            }
+
+            response.put("status", "GENERATING");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Status controller error: ", e);
+            return ResponseEntity.status(404).body(Map.of("error", "Session not found"));
         }
     }
 }

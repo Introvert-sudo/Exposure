@@ -36,7 +36,8 @@ public class DataLoader implements CommandLineRunner {
             Mission default_mission = new Mission("default_mission",
                     "mission about killing John",
                     "John very rich man. He stays in his house at party and got killed",
-                    2);
+                    2,
+                    5);
 
             missionRepository.save(default_mission);
         }

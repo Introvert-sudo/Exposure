@@ -15,7 +15,9 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -37,7 +39,7 @@ public class StoryGeneratorService {
 
     private final Logger logger = LoggerFactory.getLogger(StoryGeneratorService.class);
 
-    public Story generateStory(Mission mission, int totalRoles, int totalLyingRoles) {
+    public Map<String, Object> generateStory(Mission mission, int totalRoles, int totalLyingRoles) {
 
         String fullPrompt = buildStoryPrompt(
                 mission.getHistory_description(),
@@ -110,7 +112,8 @@ public class StoryGeneratorService {
         story.setMission(mission);
         story.setGeneratedStoryJson(json);
 
-        return storyRepository.save(story);
+        story = storyRepository.save(story);
+        return Map.of("story", story, "storyResponse", response);
     }
 
     private String extractJson(String raw) {
@@ -256,28 +259,5 @@ public class StoryGeneratorService {
            - Include ALL fields from the structure (location, role_description, etc.).
            - No markdown, no intro, no wrap.
            """;
-    }
-
-    public List<SessionBotRole> assignRoles(GameSession session, StoryResponse storyData, List<Bot> bots) {
-        List<SessionBotRole> assignments = new ArrayList<>();
-        List<RolesData> rolesJson = storyData.roles_data();
-
-        RolesData guiltyRole = rolesJson.stream()
-                .filter(RolesData::isGuilty)
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("No guilty role in JSON"));
-
-        Bot guiltyBot = session.getLyingBots().get(0);
-
-        assignments.add(new SessionBotRole(null, session, guiltyBot, guiltyRole.role(), true));
-
-        List<Bot> otherBots = bots.stream().filter(b -> !b.getId().equals(guiltyBot.getId())).toList();
-        List<RolesData> otherRoles = rolesJson.stream().filter(r -> !r.isGuilty()).toList();
-
-        for (int i = 0; i < otherBots.size(); i++) {
-            assignments.add(new SessionBotRole(null, session, otherBots.get(i), otherRoles.get(i).role(), false));
-        }
-
-        return assignments;
     }
 }

@@ -70,7 +70,7 @@ public class GameSession {
     private Boolean isActive;
 
     @Enumerated(EnumType.STRING)
-    private GameStatus status;
+    private GameStatus status = GameStatus.GENERATING;
 
     public GameSession(User user, List<Bot> bots, List<Bot> lyingBots, int initialQuestions, Mission mission) {
         this.user = user;

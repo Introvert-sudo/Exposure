@@ -1,15 +1,18 @@
 package com.exposure.controllers;
 
 import com.exposure.DTOs.game.BotDTO;
+import com.exposure.DTOs.main.MissionInfo;
 import com.exposure.models.Bot;
 import com.exposure.models.GameSession;
-import com.exposure.models.User;
+import com.exposure.models.Mission;
 import com.exposure.repositories.BotRepository;
 import com.exposure.repositories.GameSessionRepository;
+import com.exposure.repositories.MissionRepository;
 import com.exposure.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -26,10 +29,16 @@ public class MainController {
     private final BotRepository botRepository;
     private final GameSessionRepository gameSessionRepository;
     private final UserRepository userRepository;
+    private final MissionRepository missionRepository;
 
+    private final Logger logger = LoggerFactory.getLogger(MainController.class);
+
+    // TODO: Защита для токенов (обернуть в try-catch)
     @Transactional
     @GetMapping
     public ResponseEntity<?> getPage(@RequestHeader("Authorization") String token) {
+
+        System.out.println(token);
         Long userId = Long.parseLong(token);
 
         if (userRepository.findById(userId).isPresent()) {
@@ -69,7 +78,17 @@ public class MainController {
 
     // TODO: Добавить GET метод, который будет отправлять список доступных миссий пользователю.
     @GetMapping("/missions")
-    public void getMissions() {
+    public ResponseEntity<?> getMissions() {
+        try {
+            List<Mission> missions = missionRepository.findAll(); // TODO: После изменить на Lazy loading
+            List<MissionInfo> missionDTOs = missions.stream()
+                    .map(m -> new MissionInfo(m.getId(), m.getTitle()))
+                    .toList();
 
+            return ResponseEntity.ok(missionDTOs);
+        } catch (Exception e) {
+            logger.error("Error while getting missions: ", e);
+            return ResponseEntity.badRequest().build();
+        }
     }
 }

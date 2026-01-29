@@ -21,7 +21,7 @@ public class Mission {
     private Long id;
 
     @Column(length = 50)
-    private String name;
+    private String title;
     @Column(length = 250)
     private String description;
 
@@ -33,10 +33,14 @@ public class Mission {
     @Column
     private int roles_amount;
 
-    public Mission(String name, String description, String history_description, int roles_amount) {
-        this.name = name;
+    @Min(2)
+    private int initialQuestionsAmount;
+
+    public Mission(String title, String description, String history_description, int roles_amount, int initialQuestionsAmount) {
+        this.title = title;
         this.description = description;
         this.history_description = history_description;
         this.roles_amount = roles_amount;
+        this.initialQuestionsAmount = initialQuestionsAmount;
     }
 }

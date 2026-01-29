@@ -35,7 +35,7 @@ public class AuthController {
         User newUser = new User(request.getUsername(), request.getPassword());
         User savedUser = userRepository.save(newUser);
 
-        return ResponseEntity.ok(savedUser.getId());
+        return ResponseEntity.ok(new AuthResponse(savedUser.getId(), null));
     }
 
     @PostMapping("/login")
