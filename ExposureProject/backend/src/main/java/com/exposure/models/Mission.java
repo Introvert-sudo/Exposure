@@ -20,12 +20,16 @@ public class Mission {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Title
     @Column(length = 50)
     private String title;
+
+    // Public description
     @Column(length = 250)
     private String description;
 
-    @Column(length = 1000)
+    // Private description for LLM generation
+    @Column(length = 2000)
     private String history_description;
 
     @Min(2)
