@@ -64,7 +64,7 @@ public class MainController {
     }
 
 
-    // TODO: После изменить на Lazy loading
+    // TODO: Afterwards, change to Lazy loading
     @GetMapping("/bots")
     public ResponseEntity<?> getBots() {
         try {
@@ -82,7 +82,7 @@ public class MainController {
     }
 
 
-    // TODO: После изменить на Lazy loading
+    // TODO: Afterwards, change to Lazy loading
     @GetMapping("/missions")
     public ResponseEntity<?> getMissions() {
         try {

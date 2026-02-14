@@ -25,7 +25,7 @@ public class Mission {
     private String title;
 
     // Public description
-    @Column(length = 250)
+    @Column(length = 1000)
     private String description;
 
     // Private description for LLM generation

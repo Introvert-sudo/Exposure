@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
-// TODO: Перенести этот файл в более базовую часть, т.к. используется в нескольких модулях.
 
 @Getter
 @Setter
