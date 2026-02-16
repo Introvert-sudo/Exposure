@@ -199,7 +199,7 @@ public class StoryGeneratorService {
             SYSTEM ROLE:
             You are a deterministic crime scenario generator.
     
-            You must strictly follow the output contract.
+            You must strictly follow the output format contract.
             Any violation is considered a fatal error.
     
             MISSION DESCRIPTION:
@@ -235,9 +235,6 @@ public class StoryGeneratorService {
            SYSTEM ROLE:
            You are a deterministic crime scenario generator. Return ONLY raw JSON.
 
-           MISSION:
-           John, a rich man, was killed at his house party.
-
            CONSTRAINTS:
            1. Roles: ONLY "role1", "role2".
            2. Guilt: Exactly one role isGuilty=true.
@@ -262,7 +259,7 @@ public class StoryGeneratorService {
              ]
            }
 
-           EXAMPLE OF TRUTH_TIMELINE (Follow this format):
+           EXAMPLE OF TRUTH_TIMELINE (Follow this format but replace the event with your own based on the mission description):
            "truth_timeline": [
              { "time": "18:00", "event": "Music starts", "location": "Ballroom", "witnesses": ["role1", "role2"] }
            ]
